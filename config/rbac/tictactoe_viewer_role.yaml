@@ -1,0 +1,27 @@
+# permissions for end users to view tictactoes.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: tictactoe-viewer-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: kube-kic-tac-toe
+    app.kubernetes.io/part-of: kube-kic-tac-toe
+    app.kubernetes.io/managed-by: kustomize
+  name: tictactoe-viewer-role
+rules:
+- apiGroups:
+  - earayu.github.io.earayu.github.io
+  resources:
+  - tictactoes
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - earayu.github.io.earayu.github.io
+  resources:
+  - tictactoes/status
+  verbs:
+  - get

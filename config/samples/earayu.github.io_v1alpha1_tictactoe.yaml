@@ -1,0 +1,15 @@
+apiVersion: earayu.github.io.earayu.github.io/v1alpha1
+kind: TicTacToe
+metadata:
+  labels:
+    app.kubernetes.io/name: tictactoe
+    app.kubernetes.io/instance: tictactoe-sample
+    app.kubernetes.io/part-of: kube-kic-tac-toe
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: kube-kic-tac-toe
+  name: tictactoe-sample
+spec:
+  # TODO(user): Add fields here
+  row1: "0 0 0"
+  row2: "0 1 0"
+  row3: "0 0 0"
