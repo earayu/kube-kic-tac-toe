@@ -1,6 +1,12 @@
 package portable
 
-import "math/rand"
+import (
+	earayugithubiov1alpha1 "earayu.github.io/kube-kic-tac-toe/api/v1alpha1"
+	"fmt"
+	"math/rand"
+	"strconv"
+	"strings"
+)
 
 type Board = [][]int
 
@@ -47,4 +53,45 @@ func RandomMove(board Board, player int) (newBoard Board, hasMoved bool) {
 
 	board[row][col] = player
 	return board, true
+}
+
+func Move(board Board, player int, row int, col int) (newBoard Board, boardIsFull bool, err error) {
+	if board[row][col] != 0 {
+		//todo split boardIsFull & duplicate
+		return board, false, fmt.Errorf("not allowed, this position has beed taken")
+	}
+
+	board[row][col] = player
+	return board, true, nil
+}
+
+func GetBoard(ticTacToe *earayugithubiov1alpha1.TicTacToe) (Board, error) {
+	board := Board{
+		{0, 0, 0},
+		{0, 0, 0},
+		{0, 0, 0},
+	}
+
+	for i, s := range strings.Split(ticTacToe.Status.Row1, " ") {
+		if v, err := strconv.Atoi(s); err != nil {
+			return nil, err
+		} else {
+			board[0][i] = v
+		}
+	}
+	for i, s := range strings.Split(ticTacToe.Status.Row2, " ") {
+		if v, err := strconv.Atoi(s); err != nil {
+			return nil, err
+		} else {
+			board[0][i] = v
+		}
+	}
+	for i, s := range strings.Split(ticTacToe.Status.Row3, " ") {
+		if v, err := strconv.Atoi(s); err != nil {
+			return nil, err
+		} else {
+			board[0][i] = v
+		}
+	}
+	return board, nil
 }

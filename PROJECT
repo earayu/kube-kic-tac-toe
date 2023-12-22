@@ -17,4 +17,13 @@ resources:
   kind: TicTacToe
   path: earayu.github.io/kube-kic-tac-toe/api/v1alpha1
   version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: earayu.github.io
+  group: earayu.github.io
+  kind: Move
+  path: earayu.github.io/kube-kic-tac-toe/api/v1alpha1
+  version: v1alpha1
 version: "3"

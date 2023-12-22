@@ -7,6 +7,32 @@ rules:
 - apiGroups:
   - earayu.github.io.earayu.github.io
   resources:
+  - moves
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - earayu.github.io.earayu.github.io
+  resources:
+  - moves/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - earayu.github.io.earayu.github.io
+  resources:
+  - moves/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - earayu.github.io.earayu.github.io
+  resources:
   - tictactoes
   verbs:
   - create

@@ -20,13 +20,11 @@ import (
 	"context"
 	"earayu.github.io/kube-kic-tac-toe/internal/controller/portable"
 	"fmt"
-	"strconv"
-	"strings"
-
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"strconv"
 
 	earayugithubiov1alpha1 "earayu.github.io/kube-kic-tac-toe/api/v1alpha1"
 )
@@ -51,15 +49,14 @@ type TicTacToeReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.16.3/pkg/reconcile
 func (r *TicTacToeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	l := log.FromContext(ctx)
+	//l := log.FromContext(ctx)
 
 	var ticTacToe earayugithubiov1alpha1.TicTacToe
 	if err := r.Get(ctx, req.NamespacedName, &ticTacToe); err != nil {
-		l.Info(req.Name + "\n")
-		l.Info("hello world\n")
+		return reconcile.Result{}, client.IgnoreNotFound(err)
 	}
 
-	board, err := getBoard(&ticTacToe)
+	board, err := portable.GetBoard(&ticTacToe)
 	if err != nil {
 		return ctrl.Result{}, fmt.Errorf("parse row data failed, err:%w", err)
 	}
@@ -86,37 +83,6 @@ func (r *TicTacToeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, fmt.Errorf("update status err:%w", err)
 	}
 	return ctrl.Result{}, nil
-}
-
-func getBoard(ticTacToe *earayugithubiov1alpha1.TicTacToe) (portable.Board, error) {
-	board := portable.Board{
-		{0, 0, 0},
-		{0, 0, 0},
-		{0, 0, 0},
-	}
-
-	for i, s := range strings.Split(ticTacToe.Spec.Row1, " ") {
-		if v, err := strconv.Atoi(s); err != nil {
-			return nil, err
-		} else {
-			board[0][i] = v
-		}
-	}
-	for i, s := range strings.Split(ticTacToe.Spec.Row2, " ") {
-		if v, err := strconv.Atoi(s); err != nil {
-			return nil, err
-		} else {
-			board[0][i] = v
-		}
-	}
-	for i, s := range strings.Split(ticTacToe.Spec.Row3, " ") {
-		if v, err := strconv.Atoi(s); err != nil {
-			return nil, err
-		} else {
-			board[0][i] = v
-		}
-	}
-	return board, nil
 }
 
 func getRow(board portable.Board) (row1 string, row2 string, row3 string) {
