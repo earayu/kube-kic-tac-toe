@@ -1,0 +1,12 @@
+apiVersion: earayu.github.io.earayu.github.io/v1alpha1
+kind: Move
+metadata:
+  labels:
+    app.kubernetes.io/name: move
+    app.kubernetes.io/instance: move-sample
+    app.kubernetes.io/part-of: kube-kic-tac-toe
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: kube-kic-tac-toe
+  name: move-sample
+spec:
+  # TODO(user): Add fields here

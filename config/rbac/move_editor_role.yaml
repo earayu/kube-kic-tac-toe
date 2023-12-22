@@ -1,0 +1,31 @@
+# permissions for end users to edit moves.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: move-editor-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: kube-kic-tac-toe
+    app.kubernetes.io/part-of: kube-kic-tac-toe
+    app.kubernetes.io/managed-by: kustomize
+  name: move-editor-role
+rules:
+- apiGroups:
+  - earayu.github.io.earayu.github.io
+  resources:
+  - moves
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - earayu.github.io.earayu.github.io
+  resources:
+  - moves/status
+  verbs:
+  - get
