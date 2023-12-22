@@ -63,7 +63,7 @@ func (r *TicTacToeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	// bot try to make a move
 	nextPlayer := portable.NextPlayer(board)
 	if nextPlayer == earayugithubiov1alpha1.Bot {
-		newBoard, hasMoved := portable.RandomMove(board, nextPlayer)
+		newBoard, hasMoved := portable.RandomMove(board, earayugithubiov1alpha1.Bot)
 		if hasMoved {
 			ticTacToe.Status.Row1, ticTacToe.Status.Row2, ticTacToe.Status.Row3 = portable.GetRow(newBoard)
 		}
@@ -84,18 +84,6 @@ func (r *TicTacToeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, fmt.Errorf("update status err:%w", err)
 	}
 	return ctrl.Result{}, nil
-}
-
-func (r *TicTacToeReconciler) AnnounceWinner(player int) {
-	//todo
-}
-
-func flipPlayer(player int) int {
-	if player == 1 {
-		return 2
-	} else {
-		return 1
-	}
 }
 
 // SetupWithManager sets up the controller with the Manager.
