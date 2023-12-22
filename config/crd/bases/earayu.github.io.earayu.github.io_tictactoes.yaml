@@ -37,8 +37,6 @@ spec:
           status:
             description: TicTacToeStatus defines the observed state of TicTacToe
             properties:
-              currentPlayer:
-                type: integer
               row1:
                 type: string
               row2:

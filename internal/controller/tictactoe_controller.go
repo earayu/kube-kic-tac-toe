@@ -18,15 +18,14 @@ package controller
 
 import (
 	"context"
+	earayugithubiov1alpha1 "earayu.github.io/kube-kic-tac-toe/api/v1alpha1"
 	"earayu.github.io/kube-kic-tac-toe/internal/controller/portable"
 	"fmt"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"strconv"
-
-	earayugithubiov1alpha1 "earayu.github.io/kube-kic-tac-toe/api/v1alpha1"
 )
 
 // TicTacToeReconciler reconciles a TicTacToe object
@@ -49,7 +48,7 @@ type TicTacToeReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.16.3/pkg/reconcile
 func (r *TicTacToeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	//l := log.FromContext(ctx)
+	l := log.FromContext(ctx)
 
 	var ticTacToe earayugithubiov1alpha1.TicTacToe
 	if err := r.Get(ctx, req.NamespacedName, &ticTacToe); err != nil {
@@ -58,52 +57,33 @@ func (r *TicTacToeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 	board, err := portable.GetBoard(&ticTacToe)
 	if err != nil {
-		return ctrl.Result{}, fmt.Errorf("parse row data failed, err:%w", err)
-	}
-	// check if player1 has won
-	if portable.CheckWinner(board, 1) {
-		r.AnnounceWinner(1)
+		l.Info(fmt.Sprintf("parse row data failed, err:%s", err))
 		return ctrl.Result{}, nil
 	}
-	// check if player2 has won
-	if portable.CheckWinner(board, 2) {
-		r.AnnounceWinner(2)
-		return ctrl.Result{}, nil
+	// bot try to make a move
+	nextPlayer := portable.NextPlayer(board)
+	if nextPlayer == earayugithubiov1alpha1.Bot {
+		newBoard, hasMoved := portable.RandomMove(board, nextPlayer)
+		if hasMoved {
+			ticTacToe.Status.Row1, ticTacToe.Status.Row2, ticTacToe.Status.Row3 = portable.GetRow(newBoard)
+		}
 	}
-	//todo process player's move
+	// check winner
+	winner, finished := portable.CheckWinner(board)
+	if winner == earayugithubiov1alpha1.Human {
+		ticTacToe.Status.State = "human wins"
+	} else if winner == earayugithubiov1alpha1.Bot {
+		ticTacToe.Status.State = "bot wins"
+	} else if winner == earayugithubiov1alpha1.NoPlayer && finished {
+		ticTacToe.Status.State = "draw"
+	} else {
+		ticTacToe.Status.State = "playing"
+	}
 
-	// no winner
-	newBoard, hasMoved := portable.RandomMove(board, ticTacToe.Status.CurrentPlayer)
-	if hasMoved {
-		ticTacToe.Status.CurrentPlayer = flipPlayer(ticTacToe.Status.CurrentPlayer)
-	}
-	ticTacToe.Status.Row1, ticTacToe.Status.Row2, ticTacToe.Status.Row3 = getRow(newBoard)
-	err = r.Status().Update(ctx, &ticTacToe)
-	if err != nil {
+	if err = r.Status().Update(ctx, &ticTacToe); err != nil {
 		return ctrl.Result{}, fmt.Errorf("update status err:%w", err)
 	}
 	return ctrl.Result{}, nil
-}
-
-func getRow(board portable.Board) (row1 string, row2 string, row3 string) {
-	sep := ""
-	for i := range board[0] {
-		row1 += sep + strconv.Itoa(board[0][i])
-		sep = " "
-	}
-
-	sep = ""
-	for i := range board[1] {
-		row2 += sep + strconv.Itoa(board[1][i])
-		sep = " "
-	}
-
-	sep = ""
-	for i := range board[2] {
-		row3 += sep + strconv.Itoa(board[2][i])
-		sep = " "
-	}
-	return row1, row2, row3
 }
 
 func (r *TicTacToeReconciler) AnnounceWinner(player int) {
