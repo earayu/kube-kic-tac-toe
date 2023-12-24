@@ -54,6 +54,7 @@ spec:
                         column:
                           type: integer
                         player:
+                          default: 1
                           type: integer
                         row:
                           type: integer

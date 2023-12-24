@@ -10,6 +10,5 @@ metadata:
   name: move-1
 spec:
   ticTacToeName: tictactoe-game
-  player: 1
   row: 1
   column: 1

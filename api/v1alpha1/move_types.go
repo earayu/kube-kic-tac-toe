@@ -38,6 +38,7 @@ type MoveSpec struct {
 
 	TicTacToeName string `json:"ticTacToeName"`
 
+	//+kubebuilder:default=1
 	Player int `json:"player,omitempty"`
 	Row    int `json:"row,omitempty"`
 	Column int `json:"column,omitempty"`
