@@ -11,6 +11,8 @@ spec:
     kind: TicTacToe
     listKind: TicTacToeList
     plural: tictactoes
+    shortNames:
+    - ttt
     singular: tictactoe
   scope: Namespaced
   versions:
@@ -38,10 +40,13 @@ spec:
             description: TicTacToeStatus defines the observed state of TicTacToe
             properties:
               row1:
+                default: 0 0 0
                 type: string
               row2:
+                default: 0 0 0
                 type: string
               row3:
+                default: 0 0 0
                 type: string
               state:
                 description: 'State: playing,draw,humanWins,botWins'

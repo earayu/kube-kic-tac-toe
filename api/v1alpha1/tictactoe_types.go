@@ -41,16 +41,20 @@ type TicTacToeStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
+	//+kubebuilder:default="0 0 0"
 	Row1 string `json:"row1,omitempty"`
+	//+kubebuilder:default="0 0 0"
 	Row2 string `json:"row2,omitempty"`
+	//+kubebuilder:default="0 0 0"
 	Row3 string `json:"row3,omitempty"`
 
 	// State: playing,draw,humanWins,botWins
 	State string `json:"state,omitempty"`
 }
 
-//+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:resource:shortName=ttt
 
 // TicTacToe is the Schema for the tictactoes API
 type TicTacToe struct {

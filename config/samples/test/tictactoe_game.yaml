@@ -7,5 +7,5 @@ metadata:
     app.kubernetes.io/part-of: kube-kic-tac-toe
     app.kubernetes.io/managed-by: kustomize
     app.kubernetes.io/created-by: kube-kic-tac-toe
-  name: tictactoe-sample
+  name: tictactoe-game
 spec:

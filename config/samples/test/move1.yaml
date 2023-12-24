@@ -1,11 +1,14 @@
 apiVersion: earayu.github.io.earayu.github.io/v1alpha1
-kind: TicTacToe
+kind: Move
 metadata:
   labels:
-    app.kubernetes.io/name: tictactoe
-    app.kubernetes.io/instance: tictactoe-sample
+    app.kubernetes.io/name: move
+    app.kubernetes.io/instance: move-sample
     app.kubernetes.io/part-of: kube-kic-tac-toe
     app.kubernetes.io/managed-by: kustomize
     app.kubernetes.io/created-by: kube-kic-tac-toe
-  name: tictactoe-sample
+  name: move-sample
 spec:
+  ticTacToeName: tictactoe-game
+  row: 1
+  column: 1
