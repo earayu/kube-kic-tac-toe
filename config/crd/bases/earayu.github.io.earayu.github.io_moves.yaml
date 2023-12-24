@@ -36,6 +36,8 @@ spec:
             properties:
               column:
                 type: integer
+              player:
+                type: integer
               row:
                 type: integer
               ticTacToeName:

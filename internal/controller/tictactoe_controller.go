@@ -61,6 +61,7 @@ func (r *TicTacToeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		l.Info(fmt.Sprintf("parse row data failed, err:%s", err))
 		return ctrl.Result{}, nil
 	}
+	ticTacToe.Status.Chessboard = portable.GetChessBoard(board)
 
 	// check winner
 	winner, finished := portable.CheckWinner(board)
@@ -78,9 +79,9 @@ func (r *TicTacToeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		if nextPlayer == earayugithubiov1alpha1.Bot {
 			row, col, hasMoved := portable.RandomMove(board)
 			if hasMoved {
-				r.Create(ctx, &earayugithubiov1alpha1.Move{
+				err = r.Create(ctx, &earayugithubiov1alpha1.Move{
 					ObjectMeta: metav1.ObjectMeta{
-						Name:      fmt.Sprintf("%s-BOT-MOVE-%d-%d", ticTacToe.Name, row, col),
+						Name:      fmt.Sprintf("%s-bot-move-%d-%d", ticTacToe.Name, row, col),
 						Namespace: ticTacToe.Namespace,
 					},
 					Spec: earayugithubiov1alpha1.MoveSpec{
@@ -90,6 +91,9 @@ func (r *TicTacToeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 						Column:        col,
 					},
 				})
+				if err != nil {
+					return ctrl.Result{}, fmt.Errorf("create move err:%w", err)
+				}
 			}
 		}
 	}

@@ -39,15 +39,34 @@ spec:
           status:
             description: TicTacToeStatus defines the observed state of TicTacToe
             properties:
-              row1:
-                default: 0 0 0
+              chessboard:
                 type: string
-              row2:
-                default: 0 0 0
-                type: string
-              row3:
-                default: 0 0 0
-                type: string
+              move:
+                items:
+                  properties:
+                    name:
+                      type: string
+                    namespace:
+                      type: string
+                    spec:
+                      description: MoveSpec defines the desired state of Move
+                      properties:
+                        column:
+                          type: integer
+                        player:
+                          type: integer
+                        row:
+                          type: integer
+                        ticTacToeName:
+                          type: string
+                      required:
+                      - ticTacToeName
+                      type: object
+                  required:
+                  - name
+                  - namespace
+                  type: object
+                type: array
               state:
                 description: 'State: playing,draw,humanWins,botWins'
                 type: string

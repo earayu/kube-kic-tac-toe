@@ -88,8 +88,8 @@ func GetBoard(ticTacToe *earayugithubiov1alpha1.TicTacToe) (Board, error) {
 	return board, nil
 }
 
-// getChessBoard takes a Board and returns a string representation
-func getChessBoard(board Board) (chessBoard string) {
+// GetChessBoard takes a Board and returns a string representation
+func GetChessBoard(board Board) (chessBoard string) {
 	var sb strings.Builder
 	for i, row := range board {
 		for j, cell := range row {

@@ -7,9 +7,9 @@ metadata:
     app.kubernetes.io/part-of: kube-kic-tac-toe
     app.kubernetes.io/managed-by: kustomize
     app.kubernetes.io/created-by: kube-kic-tac-toe
-  name: move-1
+  name: move-5
 spec:
   ticTacToeName: tictactoe-game
   player: 1
-  row: 1
-  column: 1
+  row: 2
+  column: 2

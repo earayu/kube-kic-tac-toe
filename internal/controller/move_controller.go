@@ -57,7 +57,7 @@ func (r *MoveReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 	}
 
 	// ignore resources that we've already processed
-	if move.Status.State != earayugithubiov1alpha1.Processing {
+	if move.Status.State == earayugithubiov1alpha1.Duplicate || move.Status.State == earayugithubiov1alpha1.NotAllowed {
 		return reconcile.Result{}, nil
 	}
 
