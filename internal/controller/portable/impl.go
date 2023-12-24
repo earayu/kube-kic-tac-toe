@@ -3,7 +3,6 @@ package portable
 import (
 	earayugithubiov1alpha1 "earayu.github.io/kube-kic-tac-toe/api/v1alpha1"
 	"math/rand"
-	"strconv"
 	"strings"
 )
 
@@ -45,7 +44,7 @@ func CheckWinner(board Board) (winner int, finished bool) {
 	return earayugithubiov1alpha1.NoPlayer, finished
 }
 
-func RandomMove(board Board, player int) (newBoard Board, hasMoved bool) {
+func RandomMove(board Board) (row int, col int, hasMoved bool) {
 	var emptyPositions []int
 	for i, row := range board {
 		for j, val := range row {
@@ -56,15 +55,14 @@ func RandomMove(board Board, player int) (newBoard Board, hasMoved bool) {
 	}
 
 	if len(emptyPositions) == 0 {
-		return board, false
+		return row, col, false
 	}
 
 	pos := emptyPositions[rand.Intn(len(emptyPositions))]
-	row := pos / 3
-	col := pos % 3
+	row = pos / 3
+	col = pos % 3
 
-	board[row][col] = player
-	return board, true
+	return row, col, true
 }
 
 func Move(board Board, player int, row int, col int) (newBoard Board, duplicate bool) {
@@ -83,63 +81,45 @@ func GetBoard(ticTacToe *earayugithubiov1alpha1.TicTacToe) (Board, error) {
 		{0, 0, 0},
 	}
 
-	for i, s := range strings.Split(ticTacToe.Status.Row1, " ") {
-		if v, err := strconv.Atoi(s); err != nil {
-			return nil, err
-		} else {
-			board[0][i] = v
-		}
+	for _, m := range ticTacToe.Status.MoveHistory {
+		board[m.Spec.Row][m.Spec.Column] = m.Spec.Player
 	}
-	for i, s := range strings.Split(ticTacToe.Status.Row2, " ") {
-		if v, err := strconv.Atoi(s); err != nil {
-			return nil, err
-		} else {
-			board[0][i] = v
-		}
-	}
-	for i, s := range strings.Split(ticTacToe.Status.Row3, " ") {
-		if v, err := strconv.Atoi(s); err != nil {
-			return nil, err
-		} else {
-			board[0][i] = v
-		}
-	}
+
 	return board, nil
 }
 
-func GetRow(board Board) (row1 string, row2 string, row3 string) {
-	sep := ""
-	for i := range board[0] {
-		row1 += sep + strconv.Itoa(board[0][i])
-		sep = " "
-	}
-
-	sep = ""
-	for i := range board[1] {
-		row2 += sep + strconv.Itoa(board[1][i])
-		sep = " "
-	}
-
-	sep = ""
-	for i := range board[2] {
-		row3 += sep + strconv.Itoa(board[2][i])
-		sep = " "
-	}
-	return row1, row2, row3
-}
-
-func NextPlayer(board Board) int {
-	count1 := 0
-	count2 := 0
-	for _, row := range board {
-		for _, v := range row {
-
-			if v == earayugithubiov1alpha1.Human {
-				count1++
-			} else if v == earayugithubiov1alpha1.Bot {
-				count2++
+// getChessBoard takes a Board and returns a string representation
+func getChessBoard(board Board) (chessBoard string) {
+	var sb strings.Builder
+	for i, row := range board {
+		for j, cell := range row {
+			switch cell {
+			case 0:
+				sb.WriteString(" - ") // Empty cell
+			case 1:
+				sb.WriteString(" O ") // Player 1
+			case 2:
+				sb.WriteString(" X ") // Player 2
+			}
+			if j < len(row)-1 {
+				sb.WriteString("|") // Column separator
 			}
 		}
+		if i < len(board)-1 {
+			sb.WriteString("\n-----------\n") // Row separator
+		}
 	}
-	return 1 + count1 - count2
+	return sb.String()
+}
+
+func NextPlayer(status *earayugithubiov1alpha1.TicTacToeStatus) int {
+	moveCount := len(status.MoveHistory)
+	if moveCount == 0 {
+		return earayugithubiov1alpha1.Human
+	}
+	lastPlayer := status.MoveHistory[moveCount-1].Spec.Player
+	if lastPlayer == earayugithubiov1alpha1.Human {
+		return earayugithubiov1alpha1.Bot
+	}
+	return earayugithubiov1alpha1.Human
 }

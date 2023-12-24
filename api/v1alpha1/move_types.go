@@ -38,6 +38,7 @@ type MoveSpec struct {
 
 	TicTacToeName string `json:"ticTacToeName"`
 
+	Player int `json:"player,omitempty"`
 	Row    int `json:"row,omitempty"`
 	Column int `json:"column,omitempty"`
 }
@@ -70,6 +71,13 @@ type MoveList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []Move `json:"items"`
+}
+
+type MoveRef struct {
+	Name      string `json:"name"`
+	Namespace string `json:"namespace"`
+
+	Spec MoveSpec `json:"spec,omitempty"`
 }
 
 func init() {

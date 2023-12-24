@@ -18,7 +18,6 @@ package controller
 
 import (
 	"context"
-	"earayu.github.io/kube-kic-tac-toe/internal/controller/portable"
 	"fmt"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -82,12 +81,7 @@ func (r *MoveReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 		return reconcile.Result{}, client.IgnoreNotFound(err)
 	}
 
-	board, err := portable.GetBoard(&ticTacToe)
-	if err != nil {
-		l.Error(err, "game state error")
-		return reconcile.Result{}, nil
-	}
-	newBoard, duplicate := portable.Move(board, earayugithubiov1alpha1.Human, move.Spec.Row, move.Spec.Column)
+	duplicate := earayugithubiov1alpha1.AppendMoveRef(&ticTacToe.Status, &move)
 	if duplicate {
 		l.Info(fmt.Sprintf("current position has been taken. row:%d, col:%d", move.Spec.Row, move.Spec.Column))
 		move.Status.State = earayugithubiov1alpha1.Duplicate
@@ -96,16 +90,14 @@ func (r *MoveReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 			return ctrl.Result{}, err
 		}
 		return reconcile.Result{}, nil
+	} else {
+		move.Status.State = earayugithubiov1alpha1.Processed
+		if err := r.Status().Update(ctx, &ticTacToe); err != nil {
+			l.Error(err, "unable to update TicTacToe status")
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{}, nil
 	}
-
-	ticTacToe.Status.Row1, ticTacToe.Status.Row2, ticTacToe.Status.Row3 = portable.GetRow(newBoard)
-	move.Status.State = earayugithubiov1alpha1.Processed
-	if err := r.Status().Update(ctx, &ticTacToe); err != nil {
-		l.Error(err, "unable to update TicTacToe status")
-		return ctrl.Result{}, err
-	}
-
-	return ctrl.Result{}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.

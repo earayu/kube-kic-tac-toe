@@ -21,6 +21,7 @@ import (
 	earayugithubiov1alpha1 "earayu.github.io/kube-kic-tac-toe/api/v1alpha1"
 	"earayu.github.io/kube-kic-tac-toe/internal/controller/portable"
 	"fmt"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -60,14 +61,7 @@ func (r *TicTacToeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		l.Info(fmt.Sprintf("parse row data failed, err:%s", err))
 		return ctrl.Result{}, nil
 	}
-	// bot try to make a move
-	nextPlayer := portable.NextPlayer(board)
-	if nextPlayer == earayugithubiov1alpha1.Bot {
-		newBoard, hasMoved := portable.RandomMove(board, earayugithubiov1alpha1.Bot)
-		if hasMoved {
-			ticTacToe.Status.Row1, ticTacToe.Status.Row2, ticTacToe.Status.Row3 = portable.GetRow(newBoard)
-		}
-	}
+
 	// check winner
 	winner, finished := portable.CheckWinner(board)
 	if winner == earayugithubiov1alpha1.Human {
@@ -78,6 +72,26 @@ func (r *TicTacToeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		ticTacToe.Status.State = "draw"
 	} else {
 		ticTacToe.Status.State = "playing"
+
+		// bot try to make a move
+		nextPlayer := portable.NextPlayer(&ticTacToe.Status)
+		if nextPlayer == earayugithubiov1alpha1.Bot {
+			row, col, hasMoved := portable.RandomMove(board)
+			if hasMoved {
+				r.Create(ctx, &earayugithubiov1alpha1.Move{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      fmt.Sprintf("%s-BOT-MOVE-%d-%d", ticTacToe.Name, row, col),
+						Namespace: ticTacToe.Namespace,
+					},
+					Spec: earayugithubiov1alpha1.MoveSpec{
+						TicTacToeName: ticTacToe.Name,
+						Player:        earayugithubiov1alpha1.Bot,
+						Row:           row,
+						Column:        col,
+					},
+				})
+			}
+		}
 	}
 
 	if err = r.Status().Update(ctx, &ticTacToe); err != nil {

@@ -41,12 +41,9 @@ type TicTacToeStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	//+kubebuilder:default="0 0 0"
-	Row1 string `json:"row1,omitempty"`
-	//+kubebuilder:default="0 0 0"
-	Row2 string `json:"row2,omitempty"`
-	//+kubebuilder:default="0 0 0"
-	Row3 string `json:"row3,omitempty"`
+	MoveHistory []MoveRef `json:"move,omitempty"`
+
+	Chessboard string `json:"chessboard,omitempty"`
 
 	// State: playing,draw,humanWins,botWins
 	State string `json:"state,omitempty"`
@@ -76,4 +73,17 @@ type TicTacToeList struct {
 
 func init() {
 	SchemeBuilder.Register(&TicTacToe{}, &TicTacToeList{})
+}
+
+func AppendMoveRef(ticTacToeStatus *TicTacToeStatus, move *Move) (duplicate bool) {
+	moveCount := len(ticTacToeStatus.MoveHistory)
+	if moveCount > 0 && ticTacToeStatus.MoveHistory[moveCount-1].Spec.Player == move.Spec.Player {
+		return true
+	}
+	ticTacToeStatus.MoveHistory = append(ticTacToeStatus.MoveHistory, MoveRef{
+		move.Name,
+		move.Namespace,
+		move.Spec,
+	})
+	return false
 }
