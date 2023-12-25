@@ -19,6 +19,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -55,6 +56,24 @@ func (r *MoveReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 	if err := r.Get(ctx, req.NamespacedName, &move); err != nil {
 		return reconcile.Result{}, client.IgnoreNotFound(err)
 	}
+	namespacedName := client.ObjectKey{
+		Name:      move.Spec.TicTacToeName,
+		Namespace: req.Namespace,
+	}
+	ticTacToe := earayugithubiov1alpha1.TicTacToe{}
+	if err := r.Get(ctx, namespacedName, &ticTacToe); err != nil {
+		//todo game not found, should clean up all the moves
+		return reconcile.Result{}, client.IgnoreNotFound(err)
+	}
+
+	if err := controllerutil.SetControllerReference(&ticTacToe, &move, r.Scheme); err != nil {
+		l.Error(err, "unable to set controller reference")
+		return ctrl.Result{}, err
+	}
+	if err := r.Update(ctx, &move); err != nil {
+		l.Error(err, "unable to update Move status")
+		return ctrl.Result{}, err
+	}
 
 	// ignore resources that we've already processed
 	if move.Status.State == earayugithubiov1alpha1.Duplicate || move.Status.State == earayugithubiov1alpha1.NotAllowed {
@@ -71,16 +90,6 @@ func (r *MoveReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 		return reconcile.Result{}, nil
 	}
 
-	namespacedName := client.ObjectKey{
-		Name:      move.Spec.TicTacToeName,
-		Namespace: req.Namespace,
-	}
-	ticTacToe := earayugithubiov1alpha1.TicTacToe{}
-	if err := r.Get(ctx, namespacedName, &ticTacToe); err != nil {
-		//todo game not found, should clean up all the moves
-		return reconcile.Result{}, client.IgnoreNotFound(err)
-	}
-
 	duplicate := earayugithubiov1alpha1.AppendMoveRef(&ticTacToe.Status, &move)
 	if duplicate {
 		l.Info(fmt.Sprintf("current position has been taken. row:%d, col:%d", move.Spec.Row, move.Spec.Column))
@@ -93,6 +102,10 @@ func (r *MoveReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 	} else {
 		move.Status.State = earayugithubiov1alpha1.Processed
 		if err := r.Status().Update(ctx, &ticTacToe); err != nil {
+			l.Error(err, "unable to update TicTacToe status")
+			return ctrl.Result{}, err
+		}
+		if err := r.Status().Update(ctx, &move); err != nil {
 			l.Error(err, "unable to update TicTacToe status")
 			return ctrl.Result{}, err
 		}

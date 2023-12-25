@@ -11,4 +11,4 @@ metadata:
 spec:
   ticTacToeName: tictactoe-game
   row: 2
-  column: 2
+  column: 1
