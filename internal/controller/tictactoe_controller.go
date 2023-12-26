@@ -73,7 +73,13 @@ func (r *TicTacToeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		ticTacToe.Status.State = "draw"
 	} else {
 		ticTacToe.Status.State = "playing"
+	}
 
+	if err = r.Status().Update(ctx, &ticTacToe); err != nil {
+		return ctrl.Result{}, fmt.Errorf("update status err:%w", err)
+	}
+
+	if ticTacToe.Status.State == "playing" {
 		// bot try to make a move
 		nextPlayer := portable.NextPlayer(&ticTacToe.Status)
 		if nextPlayer == earayugithubiov1alpha1.Bot {
@@ -96,10 +102,6 @@ func (r *TicTacToeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 				}
 			}
 		}
-	}
-
-	if err = r.Status().Update(ctx, &ticTacToe); err != nil {
-		return ctrl.Result{}, fmt.Errorf("update status err:%w", err)
 	}
 	return ctrl.Result{}, nil
 }

@@ -62,7 +62,6 @@ func (r *MoveReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 	}
 	ticTacToe := earayugithubiov1alpha1.TicTacToe{}
 	if err := r.Get(ctx, namespacedName, &ticTacToe); err != nil {
-		//todo game not found, should clean up all the moves
 		return reconcile.Result{}, client.IgnoreNotFound(err)
 	}
 
