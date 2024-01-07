@@ -27,12 +27,19 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"sort"
+	"sync"
+)
+
+var (
+	ticTacToeOwnerKey = ".spec.ticTacToeName"
 )
 
 // TicTacToeReconciler reconciles a TicTacToe object
 type TicTacToeReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
+	mu     sync.Mutex
 }
 
 //+kubebuilder:rbac:groups=earayu.github.io.earayu.github.io,resources=tictactoes,verbs=get;list;watch;create;update;patch;delete
@@ -49,12 +56,25 @@ type TicTacToeReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.16.3/pkg/reconcile
 func (r *TicTacToeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	l := log.FromContext(ctx)
 
 	var ticTacToe earayugithubiov1alpha1.TicTacToe
 	if err := r.Get(ctx, req.NamespacedName, &ticTacToe); err != nil {
 		return reconcile.Result{}, client.IgnoreNotFound(err)
 	}
+
+	// List all moves with '.spec.ticTacToeName' field matching the TicTacToe's name.
+	var moveList earayugithubiov1alpha1.MoveList
+	if err := r.List(ctx, &moveList, client.InNamespace(req.Namespace), client.MatchingFields{ticTacToeOwnerKey: req.Name}); err != nil {
+		return reconcile.Result{}, fmt.Errorf("list moves err:%w", err)
+	}
+	// order moveList by creationTime
+	sort.Slice(moveList.Items, func(i, j int) bool {
+		return moveList.Items[i].CreationTimestamp.Before(&moveList.Items[j].CreationTimestamp)
+	})
+	ticTacToe.Status.MoveHistory = moveList
 
 	board, err := portable.GetBoard(&ticTacToe)
 	if err != nil {
@@ -74,7 +94,6 @@ func (r *TicTacToeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	} else {
 		ticTacToe.Status.State = "playing"
 	}
-
 	if err = r.Status().Update(ctx, &ticTacToe); err != nil {
 		return ctrl.Result{}, fmt.Errorf("update status err:%w", err)
 	}
@@ -103,11 +122,33 @@ func (r *TicTacToeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			}
 		}
 	}
+
 	return ctrl.Result{}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *TicTacToeReconciler) SetupWithManager(mgr ctrl.Manager) error {
+
+	// Index the Owner field so that we can efficiently look up all
+	// TicTacToe objects that own a given Move object.
+	if err := mgr.GetFieldIndexer().IndexField(context.Background(), &earayugithubiov1alpha1.Move{}, ticTacToeOwnerKey, func(rawObj client.Object) []string {
+		// grab the Move object, extract the owner...
+		move := rawObj.(*earayugithubiov1alpha1.Move)
+		owner := metav1.GetControllerOf(move)
+		if owner == nil {
+			return nil
+		}
+		// ...make sure it's a TicTacToe...
+		if owner.APIVersion != earayugithubiov1alpha1.GroupVersion.String() || owner.Kind != "TicTacToe" {
+			return nil
+		}
+
+		// ...and if so, return it
+		return []string{owner.Name}
+	}); err != nil {
+		return err
+	}
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&earayugithubiov1alpha1.TicTacToe{}).
 		Complete(r)

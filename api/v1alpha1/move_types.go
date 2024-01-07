@@ -74,13 +74,6 @@ type MoveList struct {
 	Items           []Move `json:"items"`
 }
 
-type MoveRef struct {
-	Name      string `json:"name"`
-	Namespace string `json:"namespace"`
-
-	Spec MoveSpec `json:"spec,omitempty"`
-}
-
 func init() {
 	SchemeBuilder.Register(&Move{}, &MoveList{})
 }

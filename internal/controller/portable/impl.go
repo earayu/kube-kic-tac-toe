@@ -81,7 +81,7 @@ func GetBoard(ticTacToe *earayugithubiov1alpha1.TicTacToe) (Board, error) {
 		{0, 0, 0},
 	}
 
-	for _, m := range ticTacToe.Status.MoveHistory {
+	for _, m := range ticTacToe.Status.MoveHistory.Items {
 		board[m.Spec.Row][m.Spec.Column] = m.Spec.Player
 	}
 
@@ -113,11 +113,11 @@ func GetChessBoard(board Board) (chessBoard string) {
 }
 
 func NextPlayer(status *earayugithubiov1alpha1.TicTacToeStatus) int {
-	moveCount := len(status.MoveHistory)
+	moveCount := len(status.MoveHistory.Items)
 	if moveCount == 0 {
 		return earayugithubiov1alpha1.Human
 	}
-	lastPlayer := status.MoveHistory[moveCount-1].Spec.Player
+	lastPlayer := status.MoveHistory.Items[moveCount-1].Spec.Player
 	if lastPlayer == earayugithubiov1alpha1.Human {
 		return earayugithubiov1alpha1.Bot
 	}
