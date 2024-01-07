@@ -18,7 +18,6 @@ package controller
 
 import (
 	"context"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -90,11 +89,11 @@ func (r *MoveReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 	}
 
 	// trigger ticTacToe reconcile
-	ticTacToe.Status.Version = metav1.Now()
-	if err := r.Status().Update(ctx, &ticTacToe); err != nil {
-		l.Error(err, "unable to update TicTacToe status")
-		return ctrl.Result{}, err
-	}
+	//ticTacToe.Status.Version = metav1.Now()
+	//if err := r.Status().Update(ctx, &ticTacToe); err != nil {
+	//	l.Error(err, "unable to update TicTacToe status")
+	//	return ctrl.Result{}, err
+	//}
 
 	return reconcile.Result{}, nil
 }

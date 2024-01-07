@@ -29,6 +29,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sort"
 	"sync"
+	"time"
 )
 
 var (
@@ -67,6 +68,7 @@ func (r *TicTacToeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 	// List all moves with '.spec.ticTacToeName' field matching the TicTacToe's name.
 	var moveList earayugithubiov1alpha1.MoveList
+	time.Sleep(1 * time.Second)
 	if err := r.List(ctx, &moveList, client.InNamespace(req.Namespace), client.MatchingFields{ticTacToeOwnerKey: req.Name}); err != nil {
 		return reconcile.Result{}, fmt.Errorf("list moves err:%w", err)
 	}
@@ -119,6 +121,7 @@ func (r *TicTacToeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 				if err != nil {
 					return ctrl.Result{}, fmt.Errorf("create move err:%w", err)
 				}
+				return ctrl.Result{Requeue: true}, nil
 			}
 		}
 	}
@@ -151,5 +154,6 @@ func (r *TicTacToeReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&earayugithubiov1alpha1.TicTacToe{}).
+		Owns(&earayugithubiov1alpha1.Move{}).
 		Complete(r)
 }
