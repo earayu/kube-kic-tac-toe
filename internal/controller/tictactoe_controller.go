@@ -25,11 +25,11 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sort"
 	"sync"
-	"time"
 )
 
 var (
@@ -67,23 +67,43 @@ func (r *TicTacToeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 
 	// List all moves with '.spec.ticTacToeName' field matching the TicTacToe's name.
-	var moveList earayugithubiov1alpha1.MoveList
-	time.Sleep(1 * time.Second)
-	if err := r.List(ctx, &moveList, client.InNamespace(req.Namespace), client.MatchingFields{ticTacToeOwnerKey: req.Name}); err != nil {
+	var allMoveList earayugithubiov1alpha1.MoveList
+	if err := r.List(ctx, &allMoveList, client.InNamespace(req.Namespace), client.MatchingFields{ticTacToeOwnerKey: req.Name}); err != nil {
 		return reconcile.Result{}, fmt.Errorf("list moves err:%w", err)
 	}
-	// order moveList by creationTime
-	sort.Slice(moveList.Items, func(i, j int) bool {
-		return moveList.Items[i].CreationTimestamp.Before(&moveList.Items[j].CreationTimestamp)
-	})
-	ticTacToe.Status.MoveHistory = moveList
-
-	board, err := portable.GetBoard(&ticTacToe)
-	if err != nil {
-		l.Info(fmt.Sprintf("parse row data failed, err:%s", err))
+	var processingMoves []earayugithubiov1alpha1.Move
+	for _, move := range allMoveList.Items {
+		if move.Status.State == earayugithubiov1alpha1.Processing || move.Status.State == "" {
+			processingMoves = append(processingMoves, move)
+		}
+	}
+	if len(processingMoves) == 0 {
 		return ctrl.Result{}, nil
 	}
-	ticTacToe.Status.Chessboard = portable.GetChessBoard(board)
+	// order allMoveList by creationTime
+	sort.Slice(processingMoves, func(i, j int) bool {
+		return processingMoves[i].CreationTimestamp.Before(&processingMoves[j].CreationTimestamp)
+	})
+	for _, move := range processingMoves {
+		invalid, duplicate, err := portable.PutOnBoard(&ticTacToe.Status.MoveHistory, move)
+		if err != nil {
+			return reconcile.Result{}, fmt.Errorf("put on board err:%w", err)
+		}
+		if invalid {
+			move.Status.State = earayugithubiov1alpha1.NotAllowed
+		} else if duplicate {
+			move.Status.State = earayugithubiov1alpha1.Duplicate
+		} else {
+			move.Status.State = earayugithubiov1alpha1.Processed
+		}
+		if err := r.Status().Update(ctx, &move); err != nil {
+			l.Error(err, "unable to update Move status")
+			return ctrl.Result{}, err
+		}
+	}
+
+	board := portable.GetBoard(&ticTacToe.Status.MoveHistory)
+	ticTacToe.Status.Chessboard1, ticTacToe.Status.Chessboard2, ticTacToe.Status.Chessboard3 = portable.GetChessBoard(board)
 
 	// check winner
 	winner, finished := portable.CheckWinner(board)
@@ -96,17 +116,17 @@ func (r *TicTacToeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	} else {
 		ticTacToe.Status.State = "playing"
 	}
-	if err = r.Status().Update(ctx, &ticTacToe); err != nil {
+	if err := r.Status().Update(ctx, &ticTacToe); err != nil {
 		return ctrl.Result{}, fmt.Errorf("update status err:%w", err)
 	}
 
 	if ticTacToe.Status.State == "playing" {
 		// bot try to make a move
-		nextPlayer := portable.NextPlayer(&ticTacToe.Status)
+		nextPlayer := portable.NextPlayer(&ticTacToe.Status.MoveHistory)
 		if nextPlayer == earayugithubiov1alpha1.Bot {
 			row, col, hasMoved := portable.RandomMove(board)
 			if hasMoved {
-				err = r.Create(ctx, &earayugithubiov1alpha1.Move{
+				botMove := &earayugithubiov1alpha1.Move{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      fmt.Sprintf("%s-bot-move-%d-%d", ticTacToe.Name, row, col),
 						Namespace: ticTacToe.Namespace,
@@ -117,7 +137,9 @@ func (r *TicTacToeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 						Row:           row,
 						Column:        col,
 					},
-				})
+				}
+				controllerutil.SetControllerReference(&ticTacToe, botMove, r.Scheme)
+				err := r.Create(ctx, botMove)
 				if err != nil {
 					return ctrl.Result{}, fmt.Errorf("create move err:%w", err)
 				}

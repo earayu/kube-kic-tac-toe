@@ -43,7 +43,9 @@ type TicTacToeStatus struct {
 
 	MoveHistory MoveList `json:"move,omitempty"`
 
-	Chessboard string `json:"chessboard,omitempty"`
+	Chessboard1 string `json:"chessboard1,omitempty"`
+	Chessboard2 string `json:"chessboard2,omitempty"`
+	Chessboard3 string `json:"chessboard3,omitempty"`
 
 	// State: playing,draw,humanWins,botWins
 	State string `json:"state,omitempty"`

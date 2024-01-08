@@ -74,24 +74,43 @@ func Move(board Board, player int, row int, col int) (newBoard Board, duplicate 
 	return board, false
 }
 
-func GetBoard(ticTacToe *earayugithubiov1alpha1.TicTacToe) (Board, error) {
+func GetBoard(moveHistory *earayugithubiov1alpha1.MoveList) Board {
 	board := Board{
 		{0, 0, 0},
 		{0, 0, 0},
 		{0, 0, 0},
 	}
 
-	for _, m := range ticTacToe.Status.MoveHistory.Items {
+	for _, m := range moveHistory.Items {
 		board[m.Spec.Row][m.Spec.Column] = m.Spec.Player
 	}
 
-	return board, nil
+	return board
+}
+
+func PutOnBoard(moveHistory *earayugithubiov1alpha1.MoveList, nextMove earayugithubiov1alpha1.Move) (invalid bool, duplicate bool, err error) {
+	board := GetBoard(moveHistory)
+	nextPlayer := NextPlayer(moveHistory)
+	if nextMove.Spec.Player != nextPlayer {
+		return true, false, nil
+	}
+	if nextMove.Spec.Row < 0 || nextMove.Spec.Row >= 3 || nextMove.Spec.Column < 0 || nextMove.Spec.Column >= 3 {
+		return true, false, nil
+	}
+	_, duplicate = Move(board, nextMove.Spec.Player, nextMove.Spec.Row, nextMove.Spec.Column)
+	if duplicate {
+		return false, true, nil
+	}
+
+	moveHistory.Items = append(moveHistory.Items, nextMove)
+	return false, false, nil
 }
 
 // GetChessBoard takes a Board and returns a string that represents the chessboard.
-func GetChessBoard(board Board) (chessBoard string) {
-	var sb strings.Builder
+func GetChessBoard(board Board) (string, string, string) {
+	chessBoard := make([]string, 3)
 	for i, row := range board {
+		var sb strings.Builder
 		for j, cell := range row {
 			switch cell {
 			case 0:
@@ -105,19 +124,17 @@ func GetChessBoard(board Board) (chessBoard string) {
 				sb.WriteString("|") // Column separator
 			}
 		}
-		if i < len(board)-1 {
-			sb.WriteString("\n-----------\n") // Row separator
-		}
+		chessBoard[i] = sb.String() // Row separator
 	}
-	return sb.String()
+	return chessBoard[0], chessBoard[1], chessBoard[2]
 }
 
-func NextPlayer(status *earayugithubiov1alpha1.TicTacToeStatus) int {
-	moveCount := len(status.MoveHistory.Items)
+func NextPlayer(moveHistory *earayugithubiov1alpha1.MoveList) int {
+	moveCount := len(moveHistory.Items)
 	if moveCount == 0 {
 		return earayugithubiov1alpha1.Human
 	}
-	lastPlayer := status.MoveHistory.Items[moveCount-1].Spec.Player
+	lastPlayer := moveHistory.Items[moveCount-1].Spec.Player
 	if lastPlayer == earayugithubiov1alpha1.Human {
 		return earayugithubiov1alpha1.Bot
 	}

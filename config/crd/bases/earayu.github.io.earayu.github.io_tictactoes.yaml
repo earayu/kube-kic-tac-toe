@@ -39,7 +39,11 @@ spec:
           status:
             description: TicTacToeStatus defines the observed state of TicTacToe
             properties:
-              chessboard:
+              chessboard1:
+                type: string
+              chessboard2:
+                type: string
+              chessboard3:
                 type: string
               move:
                 description: MoveList contains a list of Move

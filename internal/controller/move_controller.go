@@ -88,13 +88,6 @@ func (r *MoveReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 		return reconcile.Result{}, nil
 	}
 
-	// trigger ticTacToe reconcile
-	//ticTacToe.Status.Version = metav1.Now()
-	//if err := r.Status().Update(ctx, &ticTacToe); err != nil {
-	//	l.Error(err, "unable to update TicTacToe status")
-	//	return ctrl.Result{}, err
-	//}
-
 	return reconcile.Result{}, nil
 }
 
