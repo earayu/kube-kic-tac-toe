@@ -57,8 +57,6 @@ type TicTacToeReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.16.3/pkg/reconcile
 func (r *TicTacToeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
 	l := log.FromContext(ctx)
 
 	var ticTacToe earayugithubiov1alpha1.TicTacToe
