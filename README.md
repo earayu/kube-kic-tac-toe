@@ -9,9 +9,9 @@ make manifests && make generate && make install
 # run the controller
 make run
 # create a TicTacToe CRD, which will create a game
-kubectl apply -f config/samples/test/tictactoe-game.yaml
+kubectl apply -f ./config/samples/test/tictactoe_game.yaml
 # create a Move CRD, which will make a move in the game
-kubectl apply -f config/samples/test/move1.yaml
+kubectl apply -f ./config/samples/test/move1.yaml
 ```
 
 ## Getting Started
