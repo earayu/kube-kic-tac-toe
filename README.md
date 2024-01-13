@@ -1,8 +1,18 @@
 # kube-kic-tac-toe
-// TODO(user): Add simple overview of use/purpose
+A TicTacToe Game based on Kubernetes Operator. This is a sample project to demonstrate how to build a Kubernetes Operator with Kubebuilder.
 
 ## Description
-// TODO(user): An in-depth paragraph about your project and overview of use
+Please make sure kubernetes cluster is running and kubectl is configured properly.
+```zsh
+# build the CRDs and controller, and install CRDs into the kubernetes cluster
+make manifests && make generate && make install
+# run the controller
+make run
+# create a TicTacToe CRD, which will create a game
+kubectl apply -f config/samples/test/tictactoe-game.yaml
+# create a Move CRD, which will make a move in the game
+kubectl apply -f config/samples/test/move1.yaml
+```
 
 ## Getting Started
 
@@ -65,13 +75,6 @@ make uninstall
 ```sh
 make undeploy
 ```
-
-## Contributing
-// TODO(user): Add detailed information on how you would like others to contribute to this project
-
-**NOTE:** Run `make --help` for more information on all potential `make` targets
-
-More information can be found via the [Kubebuilder Documentation](https://book.kubebuilder.io/introduction.html)
 
 ## License
 
